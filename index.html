@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>민지 스케줄</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=East+Sea+Dokdo&family=Permanent+Marker&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+KR:wght@300;400;600&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<!-- html2canvas for PNG export (CDN, works offline after first load; fallback handled in JS) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+/* ── RESET & ROOT ── */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --font-ui-en: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --b50:#f0f7ff;--b100:#dbeeff;--b200:#b8daff;--b300:#7fc0ff;
+  --b400:#4aa3f5;--b500:#2185e8;--b600:#1266c4;
+  --periwinkle:#c5d8f8;
+  --td:#0d2340;--tm:#2a5080;--tl:#6b9bc8;
+  --white:#fff;
+  --sh:0 4px 24px rgba(33,133,232,.10);
+  --shh:0 10px 36px rgba(33,133,232,.20);
+  --r:18px;--rs:10px;
+}
+body{
+  font-family:'Noto Sans SC',sans-serif;
+  background:var(--b50);min-height:100vh;color:var(--td);
+  background-image:
+    radial-gradient(ellipse at 10% 10%,rgba(184,218,255,.35) 0%,transparent 50%),
+    radial-gradient(ellipse at 90% 80%,rgba(197,216,248,.30) 0%,transparent 50%),
+    radial-gradient(ellipse at 50% 50%,rgba(238,240,251,.40) 0%,transparent 70%);
+}
+
+/* ── DECO ── */
+.deco{position:fixed;pointer-events:none;z-index:0;animation:floatY 7s ease-in-out infinite;opacity:.13;}
+.deco:nth-child(1){top:6%;left:4%;animation-delay:0s;}
+.deco:nth-child(2){top:18%;right:6%;animation-delay:1.5s;}
+.deco:nth-child(3){top:55%;left:2%;animation-delay:3s;}
+.deco:nth-child(4){bottom:18%;right:4%;animation-delay:2s;}
+.deco:nth-child(5){bottom:40%;left:6%;animation-delay:4s;}
+.deco:nth-child(6){top:35%;right:3%;animation-delay:1s;}
+@keyframes floatY{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-14px) rotate(6deg);}}
+
+/* ── LAYOUT ── */
+.wrapper{max-width:1000px;margin:0 auto;padding:36px 20px 60px;position:relative;z-index:1;}
+
+/* ── HEADER ── */
+header{text-align:center;margin-bottom:40px;animation:fadeDown .6s ease both;}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-20px);}to{opacity:1;transform:translateY(0);}}
+.header-badge{
+  display:inline-block;
+  background:linear-gradient(135deg,var(--b200),var(--periwinkle));
+  color:var(--tm);font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  padding:5px 16px;border-radius:20px;margin-bottom:16px;font-weight:600;
+  font-family:'Archivo Black', sans-serif;
+}
+header h1{
+  font-family:'East Sea Dokdo', cursive;
+  font-weight:400;font-size:clamp(2.6rem,7vw,4.8rem);
+  line-height:1.15;margin-bottom:6px;
+  background:linear-gradient(135deg,var(--b400),var(--b600));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.header-sub{
+  font-family:'Permanent Marker', cursive;
+  font-size:clamp(1.1rem,2.5vw,1.4rem);
+  color:var(--tl);letter-spacing:.12em;margin-bottom:16px;font-weight:500;
+}
+.header-line{width:60px;height:2px;background:linear-gradient(90deg,var(--b300),var(--periwinkle));margin:0 auto;border-radius:2px;}
+
+/* ── NOTICE BAR ── */
+.notice-bar{
+  display:flex;align-items:center;gap:10px;
+  background:var(--white);border:1.5px solid var(--b200);
+  border-radius:40px;padding:10px 20px;
+  box-shadow:var(--sh);margin-bottom:20px;
+  animation:fadeDown .6s .05s ease both;
+  min-height:44px;
+}
+.notice-bar-icon{font-size:14px;flex-shrink:0;color:var(--b500);}
+.notice-bar-content{
+  flex:1;font-size:13px;color:var(--tm);line-height:1.5;
+  outline:none;border:none;background:transparent;
+  font-family:'Noto Sans SC',sans-serif;
+  cursor:text;
+  word-break:break-all;
+}
+.notice-bar-content:empty::before{
+  content:attr(data-placeholder);color:var(--tl);pointer-events:none;
+}
+.notice-bar-hint{font-size:10px;color:var(--tl);flex-shrink:0;white-space:nowrap;letter-spacing:.3px;}
+
+/* ── STATS ROW (4 equal cards) ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;animation:fadeUp .6s .1s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.stat-card{background:var(--white);border-radius:var(--rs);padding:14px;text-align:center;box-shadow:var(--sh);border:1px solid var(--b100);transition:transform .2s,box-shadow .2s,background .2s;cursor:pointer;user-select:none;}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shh);}
+.stat-card.active-stat{background:linear-gradient(135deg,var(--b400),var(--b500));border-color:transparent;box-shadow:0 6px 20px rgba(33,133,232,.35);}
+.stat-card.active-stat .num,.stat-card.active-stat .label{color:white;}
+.stat-card .num{font-family:'Libre Baskerville',serif;font-size:1.75rem;color:var(--b500);line-height:1;margin-bottom:4px;transition:color .2s;}
+.stat-card .label{font-size:10px;color:var(--tl);letter-spacing:.5px;transition:color .2s;}
+.birthday-card{cursor:default;background:linear-gradient(135deg,#fce7f3,#ffe4f0);border-color:#f9b8d4;}
+.birthday-card:hover{transform:translateY(-2px);}
+.birthday-card .num{color:#db2777;}
+.birthday-card .label{color:#be185d;}
+
+/* ── PAGINATION ── */
+.pagination{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;}
+.page-btn{padding:7px 14px;border-radius:20px;border:1.5px solid var(--b200);background:white;color:var(--tm);font-size:12px;cursor:pointer;font-family:'Noto Sans SC',sans-serif;transition:all .2s;}
+.page-btn:hover:not(:disabled){background:var(--b50);border-color:var(--b300);}
+.page-btn:disabled{opacity:.35;cursor:default;}
+.page-btn.cur{background:linear-gradient(135deg,var(--b400),var(--b500));color:white;border-color:transparent;box-shadow:0 3px 10px rgba(33,133,232,.3);}
+.page-info{font-size:11.5px;color:var(--tl);}
+
+@media(max-width:640px){
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .stat-card .num{font-size:1.4rem;}
+}
+
+/* ── TOOLBAR ── */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px;animation:fadeUp .6s .15s ease both;}
+.search-box{flex:1;min-width:180px;display:flex;align-items:center;background:var(--white);border:1.5px solid var(--b200);border-radius:40px;padding:9px 16px;gap:8px;box-shadow:var(--sh);}
+.search-box input{border:none;outline:none;font-size:13px;color:var(--td);background:transparent;width:100%;font-family:'Noto Sans SC',sans-serif;}
+.search-box span{color:var(--tl);font-size:14px;}
+.btn-group{display:flex;gap:6px;flex-wrap:wrap;}
+.view-btn{padding:8px 11px;border-radius:10px;border:1.5px solid var(--b200);background:white;cursor:pointer;font-size:13px;color:var(--tl);transition:all .2s;}
+.view-btn.active{background:var(--b500);color:white;border-color:transparent;}
+.btn-primary{padding:9px 18px;border-radius:30px;border:none;background:linear-gradient(135deg,var(--b400),var(--b600));color:white;font-size:12px;cursor:pointer;font-family:'Noto Sans SC',sans-serif;font-weight:500;box-shadow:0 4px 14px rgba(33,133,232,.32);transition:all .2s;white-space:nowrap;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(33,133,232,.4);}
+.btn-secondary{padding:9px 14px;border-radius:30px;border:1.5px solid var(--b200);background:white;color:var(--tm);font-size:12px;cursor:pointer;font-family:'Noto Sans SC',sans-serif;transition:all .2s;white-space:nowrap;}
+.btn-secondary:hover{background:var(--b50);border-color:var(--b300);}
+
+/* ── FILTER TABS ── */
+.filter-tabs{display:flex;gap:7px;flex-wrap:wrap;animation:fadeUp .6s .18s ease both;}
+.tab{padding:7px 14px;border-radius:30px;border:1.5px solid var(--b200);background:var(--white);color:var(--tm);font-size:11.5px;cursor:pointer;font-family:'Noto Sans SC',sans-serif;font-weight:500;transition:all .2s;white-space:nowrap;}
+.tab:hover,.tab.active{background:linear-gradient(135deg,var(--b400),var(--b500));color:white;border-color:transparent;box-shadow:0 4px 12px rgba(33,133,232,.28);}
+.archive-tab{padding:7px 16px;border-radius:30px;border:1.5px solid var(--b200);background:var(--white);color:var(--tm);font-size:11.5px;cursor:pointer;font-family:'Noto Sans SC',sans-serif;font-weight:500;transition:all .2s;white-space:nowrap;}
+.archive-tab:hover{background:var(--b50);border-color:var(--b300);}
+.archive-tab.on{background:#f3f4f6;color:#4b5563;border-color:#d1d5db;}
+
+/* ── LIST ── */
+.schedule-list{display:flex;flex-direction:column;gap:12px;animation:fadeUp .6s .2s ease both;}
+.empty-state{text-align:center;padding:56px 20px;color:var(--tl);}
+.empty-state .empty-icon{font-size:44px;margin-bottom:12px;display:block;}
+.empty-state p{font-size:14px;line-height:1.8;}
+.empty-state .btn-clear{margin-top:14px;padding:8px 20px;border-radius:30px;border:1.5px solid var(--b200);background:white;color:var(--tm);font-size:12px;cursor:pointer;font-family:'Noto Sans SC',sans-serif;transition:all .2s;}
+.empty-state .btn-clear:hover{background:var(--b50);}
+
+.schedule-item{background:var(--white);border-radius:var(--r);padding:18px 22px;box-shadow:var(--sh);border:1px solid var(--b100);display:flex;gap:16px;align-items:flex-start;transition:all .25s;animation:slideIn .35s ease both;position:relative;overflow:hidden;}
+.schedule-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px;}
+.schedule-item:hover{transform:translateX(4px);box-shadow:var(--shh);}
+@keyframes slideIn{from{opacity:0;transform:translateX(-12px);}to{opacity:1;transform:translateX(0);}}
+.schedule-item[data-cat="concert"]::before    {background:linear-gradient(180deg,#f472b6,#ec4899);}
+.schedule-item[data-cat="variety"]::before    {background:linear-gradient(180deg,#fb923c,#f97316);}
+.schedule-item[data-cat="endorsement"]::before{background:linear-gradient(180deg,#a78bfa,#7c3aed);}
+.schedule-item[data-cat="live"]::before       {background:linear-gradient(180deg,#60a5fa,#2563eb);}
+.schedule-item[data-cat="flight"]::before     {background:linear-gradient(180deg,#34d399,#059669);}
+.schedule-item[data-cat="sns"]::before        {background:linear-gradient(180deg,#f9a8d4,#ec4899);}
+
+.item-date{min-width:54px;text-align:center;background:var(--b50);border-radius:11px;padding:9px 7px;border:1px solid var(--b100);flex-shrink:0;}
+.item-date .day{font-family:'Libre Baskerville',serif;font-size:1.5rem;color:var(--b500);line-height:1;}
+.item-date .month-en{font-size:9px;color:var(--tl);letter-spacing:.5px;text-transform:uppercase;margin-top:1px;}
+.item-date .month-zh{font-size:9px;color:var(--tl);letter-spacing:.3px;margin-top:1px;}
+
+.item-body{flex:1;min-width:0;}
+.item-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px;}
+.cat-badge{font-size:10px;font-weight:700;letter-spacing:.4px;padding:2px 9px;border-radius:20px;white-space:nowrap;}
+.cat-concert    {background:#fce7f3;color:#be185d;}
+.cat-variety    {background:#fff7ed;color:#c2410c;}
+.cat-endorsement{background:#ede9fe;color:#6d28d9;}
+.cat-live       {background:#dbeafe;color:#1e40af;}
+.cat-flight     {background:#d1fae5;color:#065f46;}
+.cat-sns        {background:#fce7f3;color:#9d174d;}
+.item-title{font-size:14.5px;font-weight:700;color:var(--td);}
+.item-meta{font-size:11.5px;color:var(--tl);margin-bottom:6px;display:flex;gap:10px;flex-wrap:wrap;}
+.item-meta span{display:flex;align-items:center;gap:3px;}
+.item-note{font-size:12px;color:var(--tm);background:var(--b50);padding:7px 11px;border-radius:8px;line-height:1.6;border-left:3px solid var(--b200);}
+.item-actions{display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0;}
+.status-pill{font-size:10px;padding:3px 9px;border-radius:20px;font-weight:600;white-space:nowrap;}
+.status-upcoming{background:#dbeafe;color:#1d4ed8;}
+.status-today   {background:linear-gradient(135deg,var(--b300),var(--b400));color:white;box-shadow:0 2px 8px rgba(33,133,232,.3);}
+.status-past    {background:#f3f4f6;color:#9ca3af;}
+.btn-icon{background:none;border:1px solid var(--b200);border-radius:8px;padding:5px 8px;cursor:pointer;font-size:12px;color:var(--tl);transition:all .2s;}
+.btn-icon:hover{background:#fee2e2;border-color:#fca5a5;color:#dc2626;}
+
+/* ── CALENDAR ── */
+.calendar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;background:white;border-radius:var(--r);padding:13px 18px;box-shadow:var(--sh);border:1px solid var(--b100);gap:10px;flex-wrap:wrap;}
+.cal-nav{background:none;border:1.5px solid var(--b200);border-radius:8px;padding:6px 13px;cursor:pointer;color:var(--tm);font-size:15px;transition:all .2s;}
+.cal-nav:hover{background:var(--b50);}
+.cal-jump{display:flex;gap:7px;align-items:center;flex:1;justify-content:center;}
+.cal-jump select{border:1.5px solid var(--b200);border-radius:10px;padding:6px 10px;font-size:12px;color:var(--td);background:var(--b50);font-family:'Noto Sans SC',sans-serif;outline:none;cursor:pointer;transition:border-color .2s;}
+.cal-jump select:focus{border-color:var(--b400);background:white;}
+
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;background:white;border-radius:var(--r);padding:22px;box-shadow:var(--sh);border:1px solid var(--b100);}
+.cal-day-name{text-align:center;font-size:11px;font-weight:700;color:var(--tl);letter-spacing:.5px;padding:8px 0;text-transform:uppercase;}
+.cal-day{border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:10px 6px 8px;cursor:pointer;transition:all .15s;font-size:13px;color:var(--td);min-height:115px;gap:4px;}
+.cal-day:hover{background:var(--b50);}
+.cal-day.today{background:linear-gradient(135deg,var(--b400),var(--b500));color:white;font-weight:700;}
+.cal-day.other-month{color:var(--tl);opacity:.4;}
+.cal-day.has-event{background:var(--b50);border:1px solid var(--b200);}
+.cal-day.today.has-event{background:linear-gradient(135deg,var(--b400),var(--b500));border:none;}
+.cal-day-num{font-size:15px;font-weight:600;line-height:1;margin-bottom:4px;}
+.cal-today .cal-day-num{color:white;}
+.cal-event-row{display:flex;align-items:center;gap:2px;width:100%;padding:0 3px;}
+.cal-event-icon{font-size:11px;flex-shrink:0;}
+.cal-event-text{font-size:10px;color:var(--tm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;line-height:1.3;}
+.cal-day.today .cal-event-text,.cal-day.today .cal-event-icon{color:rgba(255,255,255,.9);}
+
+/* ── STATS PANEL ── */
+.stats-panel{background:white;border-radius:var(--r);padding:22px;box-shadow:var(--sh);border:1px solid var(--b100);margin-bottom:20px;animation:fadeUp .4s ease both;}
+.stats-panel h3{font-family:'Libre Baskerville',serif;font-size:1rem;color:var(--b500);margin-bottom:16px;font-weight:400;}
+.stat-filter-row{display:flex;flex-direction:column;gap:14px;margin-bottom:18px;padding:16px;background:var(--b50);border-radius:12px;border:1px solid var(--b100);}
+.stat-filter-group{display:flex;flex-direction:column;gap:7px;}
+.stat-filter-label{font-size:10px;font-weight:700;color:var(--tl);letter-spacing:.8px;text-transform:uppercase;}
+.stat-range-btn{padding:5px 13px;border-radius:20px;border:1.5px solid var(--b200);background:white;color:var(--tm);font-size:11px;cursor:pointer;font-family:'Noto Sans SC',sans-serif;transition:all .2s;white-space:nowrap;}
+.stat-range-btn:hover,.stat-range-btn.active{background:linear-gradient(135deg,var(--b400),var(--b500));color:white;border-color:transparent;}
+.stat-cat-check{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;border:1.5px solid var(--b200);background:white;cursor:pointer;font-size:11px;color:var(--tm);transition:all .2s;user-select:none;}
+.stat-cat-check.checked{border-color:var(--b400);background:var(--b50);color:var(--b500);}
+.stat-cat-check input{display:none;}
+.stat-result-summary{font-size:12px;color:var(--tm);margin-bottom:14px;padding:8px 14px;background:linear-gradient(135deg,var(--b100),var(--periwinkle));border-radius:10px;}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.stat-section h4{font-size:11px;font-weight:700;color:var(--tl);letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;}
+.stat-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.stat-bar-label{font-size:11px;color:var(--tm);min-width:64px;white-space:nowrap;}
+.stat-bar-wrap{flex:1;background:var(--b100);border-radius:4px;height:7px;overflow:hidden;}
+.stat-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--b400),var(--b500));transition:width .5s ease;}
+.stat-bar-count{font-size:10px;color:var(--tl);min-width:18px;text-align:right;font-weight:700;}
+.stat-month-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--b100);font-size:11px;}
+.stat-month-row:last-child{border-bottom:none;}
+.stat-month-label{color:var(--tm);}
+.stat-month-val{color:var(--b500);font-weight:700;}
+@media(max-width:640px){.stats-grid{grid-template-columns:1fr;}}
+
+/* ── EXPORT PANEL ── */
+.export-panel{background:white;border-radius:var(--r);padding:18px 22px;box-shadow:var(--sh);border:1px solid var(--b100);margin-bottom:20px;animation:fadeUp .4s ease both;}
+.export-panel h3{font-family:'Libre Baskerville',serif;font-size:1rem;color:var(--b500);margin-bottom:14px;font-weight:400;}
+.export-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.export-btns button{padding:9px 18px;border-radius:30px;border:1.5px solid var(--b200);background:var(--b50);color:var(--tm);font-size:12px;cursor:pointer;font-family:'Noto Sans SC',sans-serif;transition:all .2s;}
+.export-btns button:hover{background:var(--b100);border-color:var(--b300);}
+.export-hint{font-size:11px;color:var(--tl);}
+
+/* ── DATA PANEL ── */
+.data-panel{background:white;border-radius:var(--r);padding:18px 22px;box-shadow:var(--sh);border:1px solid var(--b100);margin-bottom:20px;animation:fadeUp .4s ease both;}
+.data-panel h3{font-family:'Libre Baskerville',serif;font-size:1rem;color:var(--b500);margin-bottom:14px;font-weight:400;}
+.data-btns{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(13,35,64,.35);backdrop-filter:blur(6px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--white);border-radius:24px;padding:32px 28px;width:100%;max-width:500px;box-shadow:0 24px 64px rgba(33,133,232,.18);transform:scale(.95) translateY(10px);transition:transform .25s;max-height:92vh;overflow-y:auto;}
+.modal-overlay.open .modal{transform:scale(1) translateY(0);}
+.modal h2{font-family:'Noto Sans SC',sans-serif;font-weight:700;font-size:1.15rem;color:var(--b500);margin-bottom:20px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:11px;font-weight:700;color:var(--tm);letter-spacing:.8px;margin-bottom:6px;text-transform:uppercase;}
+.form-group input,.form-group select,.form-group textarea{width:100%;border:1.5px solid var(--b200);border-radius:11px;padding:10px 13px;font-size:13px;color:var(--td);background:var(--b50);font-family:'Noto Sans SC',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--b400);box-shadow:0 0 0 3px rgba(74,163,245,.12);background:white;}
+.form-group textarea{resize:vertical;min-height:72px;}
+.date-jump-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+.time-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-actions{display:flex;gap:9px;margin-top:22px;}
+.btn-cancel{flex:1;padding:11px;border-radius:11px;border:1.5px solid var(--b200);background:white;color:var(--tm);font-size:13px;cursor:pointer;font-family:'Noto Sans SC',sans-serif;transition:all .2s;}
+.btn-cancel:hover{background:var(--b50);}
+.btn-submit{flex:2;padding:11px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--b400),var(--b600));color:white;font-size:13px;cursor:pointer;font-weight:600;font-family:'Noto Sans SC',sans-serif;box-shadow:0 4px 14px rgba(33,133,232,.3);transition:all .2s;}
+.btn-submit:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(33,133,232,.4);}
+
+/* ── EXPORT PREVIEW (hidden, for canvas render)
+     iPhone 16 Pro Max 竖屏逻辑像素 430pt → 实际用 393px 渲染，scale×3 输出 1179px
+     与 iPhone 16 Pro Max 屏宽 1320px 接近，保证全屏清晰查看
+── */
+#exportCanvas{
+  position:fixed;left:-9999px;top:0;
+  width:393px;          /* 改为 iPhone 竖屏宽度（逻辑像素）*/
+  background:var(--b50);
+  padding:28px 20px;    /* 适当缩小内边距 */
+  font-family:'Noto Sans SC',sans-serif;z-index:-1;
+}
+#exportCanvas .exp-header{text-align:center;margin-bottom:22px;}
+#exportCanvas .exp-title{
+  font-family:'East Sea Dokdo', cursive;
+  font-weight:400;
+  font-size:42px;
+  line-height:1.1;
+  color:#2185e8;
+  margin-bottom:6px;
+}
+#exportCanvas .exp-range{font-size:11px;color:var(--tl);letter-spacing:1px;}
+#exportCanvas .exp-item{background:white;border-radius:12px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--b100);display:flex;gap:11px;align-items:flex-start;box-shadow:0 2px 8px rgba(33,133,232,.07);}
+#exportCanvas .exp-item-date{min-width:42px;text-align:center;background:var(--b50);border-radius:9px;padding:7px 5px;border:1px solid var(--b100);}
+#exportCanvas .exp-item-day{font-size:1.15rem;font-weight:700;color:var(--b500);line-height:1;}
+#exportCanvas .exp-item-mon{font-size:8px;color:var(--tl);text-transform:uppercase;margin-top:2px;}
+#exportCanvas .exp-item-body{flex:1;min-width:0;}
+#exportCanvas .exp-cat{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;display:inline-block;margin-bottom:4px;}
+#exportCanvas .exp-item-title{font-size:13px;font-weight:700;color:var(--td);margin-bottom:3px;word-break:break-word;}
+#exportCanvas .exp-item-meta{font-size:10px;color:var(--tl);}
+#exportCanvas .exp-footer{text-align:center;margin-top:20px;font-size:9px;color:var(--tl);letter-spacing:1px;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--td);color:white;padding:11px 22px;border-radius:30px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:200;transition:transform .35s ease;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ── SECTION TOGGLE ── */
+.section-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;animation:fadeUp .6s .22s ease both;}
+.toggle-btn{padding:7px 14px;border-radius:20px;border:1.5px solid var(--b200);background:white;color:var(--tm);font-size:11.5px;cursor:pointer;font-family:'Noto Sans SC',sans-serif;transition:all .2s;}
+.toggle-btn.on{background:var(--b50);border-color:var(--b300);color:var(--b500);font-weight:600;}
+
+.hidden{display:none!important;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  .wrapper{padding:22px 13px 50px;}
+  .form-row{grid-template-columns:1fr;}
+  .date-jump-row{grid-template-columns:1fr 1fr 1fr;}
+  .time-row{grid-template-columns:1fr 1fr;}
+  .controls{gap:7px;}
+  .modal{padding:26px 20px;}
+  .schedule-item{padding:14px 16px;}
+  .stats-grid{grid-template-columns:1fr;}
+}
+
+/* ── ENGLISH & NUMERIC TYPOGRAPHY ── */
+.num,
+.stat-card .num,
+.item-date .day,
+.cal-day-num,
+#birthdayCountdown,
+.stat-bar-count,
+.stat-month-val,
+.month-en,
+.cal-day-name,
+.page-info{
+  font-family: var(--font-ui-en);
+  font-variant-numeric: tabular-nums;
+}
+
+#birthdayCountdown{
+  font-weight:600;
+  letter-spacing:.02em;
+}
+
+.month-en{
+  opacity:.85;
+  letter-spacing:.08em;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ── DECO: stars only ── -->
+<div class="deco"><svg width="22" height="22" viewBox="0 0 22 22" fill="#4aa3f5"><polygon points="11,1 13.5,8 21,8 15,13 17.5,21 11,16 4.5,21 7,13 1,8 8.5,8"/></svg></div>
+<div class="deco"><svg width="14" height="14" viewBox="0 0 22 22" fill="#7fc0ff"><polygon points="11,1 13.5,8 21,8 15,13 17.5,21 11,16 4.5,21 7,13 1,8 8.5,8"/></svg></div>
+<div class="deco"><svg width="18" height="18" viewBox="0 0 22 22" fill="#b8daff"><polygon points="11,1 13.5,8 21,8 15,13 17.5,21 11,16 4.5,21 7,13 1,8 8.5,8"/></svg></div>
+<div class="deco"><svg width="26" height="26" viewBox="0 0 22 22" fill="#4aa3f5"><polygon points="11,1 13.5,8 21,8 15,13 17.5,21 11,16 4.5,21 7,13 1,8 8.5,8"/></svg></div>
+<div class="deco"><svg width="12" height="12" viewBox="0 0 22 22" fill="#c5d8f8"><polygon points="11,1 13.5,8 21,8 15,13 17.5,21 11,16 4.5,21 7,13 1,8 8.5,8"/></svg></div>
+<div class="deco"><svg width="20" height="20" viewBox="0 0 22 22" fill="#7fc0ff"><polygon points="11,1 13.5,8 21,8 15,13 17.5,21 11,16 4.5,21 7,13 1,8 8.5,8"/></svg></div>
+
+
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-badge">NEWJEANS · MINJI</div>
+    <h1>민지 스케줄</h1>
+    <div class="header-sub">Minji schedule</div>
+    <div class="header-line"></div>
+  </header>
+
+  <!-- NOTICE BAR -->
+  <div class="notice-bar" id="noticeBar">
+    <span class="notice-bar-icon">📢</span>
+    <div
+      class="notice-bar-content"
+      id="noticeContent"
+      contenteditable="true"
+      data-placeholder="点击此处输入公告内容…"
+      onblur="saveNotice()"
+    ></div>
+    <span class="notice-bar-hint">可编辑</span>
+  </div>
+
+  <!-- STAT CARDS (4 equal) -->
+  <div class="stats-row">
+    <div class="stat-card birthday-card">
+      <div class="num" id="birthdayCountdown">—</div>
+      <div class="label">许愿日♡</div>
+    </div>
+    <div class="stat-card active-stat" id="sc-upcoming" onclick="setStatFilter('upcoming')">
+      <div class="num" id="statUpcoming">0</div><div class="label">即将到来</div>
+    </div>
+    <div class="stat-card" id="sc-today" onclick="setStatFilter('today')">
+      <div class="num" id="statToday">0</div><div class="label">今日行程</div>
+    </div>
+    <div class="stat-card" id="sc-past" onclick="setStatFilter('past')">
+      <div class="num" id="statPast">0</div><div class="label">已完成</div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="search-box">
+      <span>🔍</span>
+      <input type="text" id="searchInput" placeholder="搜索行程…" oninput="renderList()">
+    </div>
+    <div class="btn-group">
+      <button class="view-btn active" id="viewList" onclick="setView('list')" title="列表">☰</button>
+      <button class="view-btn" id="viewCal" onclick="setView('calendar')" title="日历">📅</button>
+      <button class="toggle-btn" id="toggleStats" onclick="toggleSection('stats')">统计</button>
+      <button class="toggle-btn" id="toggleExport" onclick="toggleSection('export')">导出图片</button>
+      <button class="toggle-btn" id="toggleData" onclick="toggleSection('data')">数据备份</button>
+    </div>
+    <button class="btn-primary" onclick="openModal()">＋ 添加行程</button>
+  </div>
+
+  <!-- FILTER TABS -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+    <div class="filter-tabs" id="filterTabs"></div>
+    <button class="archive-tab" id="archiveTab" onclick="toggleArchive()">🗂 已完成</button>
+  </div>
+
+  <!-- STATS PANEL -->
+  <div class="stats-panel hidden" id="statsPanel">
+    <h3>行程统计</h3>
+    <!-- Filter controls -->
+    <div class="stat-filter-row">
+      <div class="stat-filter-group">
+        <label class="stat-filter-label">时间范围</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="stat-range-btn active" onclick="setStatRange('all',this)">全部</button>
+          <button class="stat-range-btn" onclick="setStatRange('thisMonth',this)">本月</button>
+          <button class="stat-range-btn" onclick="setStatRange('last3',this)">近3个月</button>
+          <button class="stat-range-btn" onclick="setStatRange('thisYear',this)">今年</button>
+          <button class="stat-range-btn" onclick="setStatRange('custom',this)">自定义</button>
+        </div>
+        <div id="customRangeRow" class="hidden" style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;">
+          <input type="date" id="statDateFrom" style="border:1.5px solid var(--b200);border-radius:9px;padding:6px 10px;font-size:12px;background:var(--b50);outline:none;color:var(--td);" onchange="applyStatFilters()">
+          <span style="color:var(--tl);font-size:12px;">至</span>
+          <input type="date" id="statDateTo" style="border:1.5px solid var(--b200);border-radius:9px;padding:6px 10px;font-size:12px;background:var(--b50);outline:none;color:var(--td);" onchange="applyStatFilters()">
+        </div>
+      </div>
+      <div class="stat-filter-group">
+        <label class="stat-filter-label">行程类型</label>
+        <div id="statCatCheckboxes" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      </div>
+    </div>
+    <div class="stat-result-summary" id="statSummary"></div>
+    <div class="stats-grid">
+      <div class="stat-section">
+        <h4>按类型分布</h4>
+        <div id="statByCat"></div>
+      </div>
+      <div class="stat-section">
+        <h4>按月份汇总</h4>
+        <div id="statByMonth"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT PANEL -->
+  <div class="export-panel hidden" id="exportPanel">
+    <h3>导出行程图片</h3>
+    <div class="export-btns">
+      <button onclick="exportImg('day')">📅 导出今日</button>
+      <button onclick="exportImg('week')">📆 导出本周</button>
+      <button onclick="exportImg('month')">🗓 导出本月</button>
+    </div>
+    <div class="export-hint">将行程内容导出为 PNG 图片，适配手机竖屏查看</div>
+  </div>
+
+  <!-- DATA PANEL -->
+  <div class="data-panel hidden" id="dataPanel">
+    <h3>数据备份 / 恢复</h3>
+    <div class="data-btns">
+      <button class="btn-secondary" onclick="exportJSON()">⬇ 导出 JSON</button>
+      <button class="btn-secondary" onclick="document.getElementById('importFile').click()">⬆ 导入 JSON</button>
+    </div>
+    <input type="file" id="importFile" accept=".json" class="hidden" onchange="importJSON(event)">
+  </div>
+
+  <!-- LIST VIEW -->
+  <div id="listView">
+    <!-- Calendar date filter banner -->
+    <div id="calDateBanner" style="display:none;align-items:center;background:var(--b100);border:1.5px solid var(--b200);border-radius:30px;padding:8px 16px;margin-bottom:14px;font-size:13px;color:var(--tm);"></div>
+    <!-- Archive mode banner -->
+    <div id="archiveBanner" style="display:none;align-items:center;gap:8px;background:#f3f4f6;border:1.5px solid #d1d5db;border-radius:30px;padding:8px 16px;margin-bottom:14px;font-size:13px;color:#4b5563;">
+      <span>🗂 已完成行程</span>
+      <button onclick="toggleArchive()" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:13px;margin-left:4px;">✕ 返回</button>
+    </div>
+    <div class="schedule-list" id="scheduleList"></div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <!-- CALENDAR VIEW -->
+  <div id="calView" class="hidden">
+    <div class="calendar-header">
+      <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+      <div class="cal-jump">
+        <select id="calYearSel" onchange="jumpCalendar()"></select>
+        <select id="calMonthSel" onchange="jumpCalendar()"></select>
+      </div>
+      <button class="cal-nav" onclick="changeMonth(1)">›</button>
+    </div>
+    <div class="calendar-grid" id="calGrid"></div>
+  </div>
+
+</div><!-- /wrapper -->
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <h2 id="modalTitle">新增行程</h2>
+
+    <div class="form-group">
+      <label>行程标题 *</label>
+      <input type="text" id="fTitle" placeholder="例如：NewJeans Tokyo Dome Concert" maxlength="80">
+    </div>
+
+    <div class="form-group">
+      <label>日期 *</label>
+      <div class="date-jump-row">
+        <select id="fYear"></select>
+        <select id="fMonth"></select>
+        <select id="fDay"></select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>时间（选填）</label>
+      <div class="time-row">
+        <input type="time" id="fTimeStart" placeholder="开始时间">
+        <input type="time" id="fTimeEnd" placeholder="结束时间">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>类别 *</label>
+        <select id="fCat">
+          <option value="concert">🎤 舞台演出</option>
+          <option value="variety">🎬 物料&综艺</option>
+          <option value="endorsement">💼 商务</option>
+          <option value="live">🔴 直播</option>
+          <option value="flight">✈️ 飞机行程</option>
+          <option value="sns">📱 社媒动态</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>地点</label>
+        <input type="text" id="fLocation" placeholder="例如：首尔 KSPO Dome">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>备注</label>
+      <textarea id="fNote" placeholder="可以记录票价、入场时间、或者你的心情…"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>链接</label>
+      <input type="url" id="fLink" placeholder="相关公告或新闻链接">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-submit" onclick="saveItem()">保存行程</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden export canvas -->
+<div id="exportCanvas"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════
+//  DATA
+// ════════════════════════════════════════
+let items = JSON.parse(localStorage.getItem('minji_schedule') || '[]');
+let currentFilter     = 'all';
+let currentStatFilter = 'upcoming'; // default: show upcoming
+let currentView       = 'list';
+let currentCalDate    = null;
+let archiveMode       = false;      // true = showing past items
+let currentPage       = 1;
+const PAGE_SIZE       = 10;
+let editId            = null;
+let calYear, calMonth;
+
+const today = new Date(); today.setHours(0,0,0,0);
+calYear  = today.getFullYear();
+calMonth = today.getMonth();
+
+const CAT_MAP = {
+  concert:     { label:'舞台演出',  icon:'🎤', cls:'cat-concert' },
+  variety:     { label:'物料&综艺', icon:'🎬', cls:'cat-variety' },
+  endorsement: { label:'商务',      icon:'💼', cls:'cat-endorsement' },
+  live:        { label:'直播',      icon:'🔴', cls:'cat-live' },
+  flight:      { label:'飞机行程',  icon:'✈️', cls:'cat-flight' },
+  sns:         { label:'社媒动态',  icon:'📱', cls:'cat-sns' },
+};
+
+const MONTHS_ZH = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const MONTHS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+let catOrder = JSON.parse(localStorage.getItem('minji_cat_order') || 'null')
+  || ['concert','variety','endorsement','live','flight','sns'];
+
+function saveCatOrder(){ localStorage.setItem('minji_cat_order', JSON.stringify(catOrder)); }
+function bumpCat(cat){
+  catOrder = catOrder.filter(c => c !== cat);
+  catOrder.unshift(cat);
+  saveCatOrder();
+}
+function persist(){ localStorage.setItem('minji_schedule', JSON.stringify(items)); }
+
+// ════════════════════════════════════════
+//  STATUS
+// ════════════════════════════════════════
+function getStatus(dateStr){
+  const d = new Date(dateStr); d.setHours(0,0,0,0);
+  if(d.getTime() === today.getTime()) return 'today';
+  return d > today ? 'upcoming' : 'past';
+}
+const STATUS_LABEL = { today:'今天 ✦', upcoming:'即将到来', past:'已完成' };
+const STATUS_CLS   = { today:'status-today', upcoming:'status-upcoming', past:'status-past' };
+
+// ════════════════════════════════════════
+//  STAT FILTER (top cards)
+// ════════════════════════════════════════
+function setStatFilter(key){
+  currentStatFilter = key;
+  archiveMode = false;
+  currentCalDate = null;
+  currentPage = 1;
+  ['upcoming','today','past'].forEach(k =>
+    document.getElementById('sc-'+k).classList.toggle('active-stat', k === key)
+  );
+  document.getElementById('searchInput').value = '';
+  document.getElementById('archiveTab').classList.remove('on');
+  renderList();
+}
+
+function toggleArchive(){
+  archiveMode = !archiveMode;
+  currentPage = 1;
+  const btn = document.getElementById('archiveTab');
+  if(archiveMode){
+    // deactivate stat cards
+    ['upcoming','today','past'].forEach(k =>
+      document.getElementById('sc-'+k).classList.remove('active-stat')
+    );
+    btn.classList.add('on');
+    currentCalDate = null;
+    document.getElementById('searchInput').value = '';
+  } else {
+    btn.classList.remove('on');
+    // restore upcoming as default
+    currentStatFilter = 'upcoming';
+    document.getElementById('sc-upcoming').classList.add('active-stat');
+  }
+  renderList();
+}
+
+// ════════════════════════════════════════
+//  FILTER TABS
+// ════════════════════════════════════════
+function renderFilterTabs(){
+  const el = document.getElementById('filterTabs');
+  const allBtn = `<button class="tab ${currentFilter==='all'?'active':''}" onclick="setFilter('all',this)">全部</button>`;
+  const cats = catOrder.map(cat => {
+    const c = CAT_MAP[cat]; if(!c) return '';
+    return `<button class="tab ${currentFilter===cat?'active':''}" onclick="setFilter('${cat}',this)">${c.icon} ${c.label}</button>`;
+  }).join('');
+  el.innerHTML = allBtn + cats;
+}
+
+function setFilter(cat, el){
+  currentFilter = cat;
+  currentPage = 1;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderList();
+}
+
+// ════════════════════════════════════════
+//  DATE SELECTORS
+// ════════════════════════════════════════
+function buildDateSelectors(idY, idM, idD, dateStr){
+  const sy = document.getElementById(idY);
+  const sm = document.getElementById(idM);
+  const sd = document.getElementById(idD);
+  sy.innerHTML = '';
+  for(let y=2020; y<=2035; y++){
+    const o=document.createElement('option'); o.value=y; o.textContent=y+'年'; sy.appendChild(o);
+  }
+  sm.innerHTML = MONTHS_ZH.map((m,i)=>`<option value="${i+1}">${m}</option>`).join('');
+  const refreshDays = () => {
+    const y=+sy.value, mo=+sm.value;
+    const max=new Date(y,mo,0).getDate(), cur=+sd.value||1;
+    sd.innerHTML='';
+    for(let d=1;d<=max;d++){const o=document.createElement('option');o.value=d;o.textContent=d+'日';sd.appendChild(o);}
+    sd.value=Math.min(cur,max);
+  };
+  sy.onchange=sm.onchange=refreshDays;
+  let y=today.getFullYear(), mo=today.getMonth()+1, d=today.getDate();
+  if(dateStr){const p=dateStr.split('-');y=+p[0];mo=+p[1];d=+p[2];}
+  sy.value=y; sm.value=mo; refreshDays(); sd.value=d;
+}
+
+function getDateVal(){
+  const y=document.getElementById('fYear').value;
+  const mo=String(document.getElementById('fMonth').value).padStart(2,'0');
+  const d=String(document.getElementById('fDay').value).padStart(2,'0');
+  return `${y}-${mo}-${d}`;
+}
+
+// ════════════════════════════════════════
+//  CALENDAR JUMP
+// ════════════════════════════════════════
+function buildCalJump(){
+  const sy=document.getElementById('calYearSel');
+  const sm=document.getElementById('calMonthSel');
+  sy.innerHTML='';
+  for(let y=2020;y<=2035;y++){const o=document.createElement('option');o.value=y;o.textContent=y+'年';sy.appendChild(o);}
+  sm.innerHTML=MONTHS_ZH.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+  sy.value=calYear; sm.value=calMonth;
+}
+function jumpCalendar(){
+  calYear=+document.getElementById('calYearSel').value;
+  calMonth=+document.getElementById('calMonthSel').value;
+  renderCalendar();
+}
+
+// ════════════════════════════════════════
+//  MODAL
+// ════════════════════════════════════════
+function openModal(id=null){
+  editId=id;
+  document.getElementById('modalTitle').textContent = id ? '编辑行程' : '新增行程';
+  let dateStr=null;
+  if(id){
+    const it=items.find(x=>x.id===id);
+    document.getElementById('fTitle').value    = it.title;
+    document.getElementById('fTimeStart').value= it.timeStart||'';
+    document.getElementById('fTimeEnd').value  = it.timeEnd||'';
+    document.getElementById('fCat').value      = it.cat;
+    document.getElementById('fLocation').value = it.location||'';
+    document.getElementById('fNote').value     = it.note||'';
+    document.getElementById('fLink').value     = it.link||'';
+    dateStr=it.date;
+  } else {
+    ['fTitle','fTimeStart','fTimeEnd','fLocation','fNote','fLink'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('fCat').value=catOrder[0]||'concert';
+  }
+  buildDateSelectors('fYear','fMonth','fDay',dateStr);
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); editId=null; }
+function closeModalOutside(e){ if(e.target===document.getElementById('modalOverlay')) closeModal(); }
+
+function saveItem(){
+  const title=document.getElementById('fTitle').value.trim();
+  if(!title){ showToast('请填写行程标题'); return; }
+  const cat=document.getElementById('fCat').value;
+  const item={
+    id:      editId||Date.now().toString(),
+    title,
+    date:    getDateVal(),
+    timeStart: document.getElementById('fTimeStart').value,
+    timeEnd:   document.getElementById('fTimeEnd').value,
+    cat,
+    location:  document.getElementById('fLocation').value.trim(),
+    note:      document.getElementById('fNote').value.trim(),
+    link:      document.getElementById('fLink').value.trim(),
+    createdAt: editId?(items.find(x=>x.id===editId)?.createdAt||Date.now()):Date.now(),
+    updatedAt: Date.now(),
+  };
+  bumpCat(cat);
+  if(editId){
+    items[items.findIndex(x=>x.id===editId)]=item;
+    showToast('行程已更新 ✦');
+  } else {
+    items.push(item);
+    showToast('行程已添加 ✦');
+  }
+  persist(); closeModal();
+  renderFilterTabs(); renderList(); updateStats();
+  if(currentView==='calendar') renderCalendar();
+  updateStatsPanel();
+}
+
+function deleteItem(id){
+  if(!confirm('确定要删除这条行程吗？')) return;
+  items=items.filter(x=>x.id!==id);
+  persist(); renderList(); updateStats();
+  if(currentView==='calendar') renderCalendar();
+  updateStatsPanel();
+  showToast('已删除行程');
+}
+
+// ════════════════════════════════════════
+//  RENDER LIST
+// ════════════════════════════════════════
+function renderList(){
+  const list=document.getElementById('scheduleList');
+  const pg=document.getElementById('pagination');
+  const q=document.getElementById('searchInput').value.toLowerCase();
+
+  // Archive banner
+  const archBanner=document.getElementById('archiveBanner');
+  archBanner.style.display = archiveMode ? 'flex' : 'none';
+
+  // Date filter banner
+  const bannerEl=document.getElementById('calDateBanner');
+  if(currentCalDate&&bannerEl){
+    const [y,mo,d]=currentCalDate.split('-');
+    bannerEl.innerHTML=`<span>📅 ${y}年${+mo}月${+d}日的行程</span><button onclick="clearCalDate()" style="background:none;border:none;cursor:pointer;color:var(--tl);font-size:13px;margin-left:8px;">✕ 清除</button>`;
+    bannerEl.style.display='flex';
+  } else if(bannerEl){
+    bannerEl.style.display='none';
+  }
+
+  let filtered=items.filter(it=>{
+    const matchCat  = currentFilter==='all'||it.cat===currentFilter;
+    const matchQ    = !q||it.title.toLowerCase().includes(q)||
+                      (it.location||'').toLowerCase().includes(q)||
+                      (it.note||'').toLowerCase().includes(q);
+    const matchDate = !currentCalDate||it.date===currentCalDate;
+
+    if(archiveMode){
+      return getStatus(it.date)==='past'&&matchCat&&matchQ;
+    } else {
+      const status=getStatus(it.date);
+      const statOk = currentCalDate ? true : (currentStatFilter==='all'
+        ? (status==='today'||status==='upcoming')
+        : status===currentStatFilter);
+      return statOk&&matchCat&&matchQ&&matchDate;
+    }
+  });
+
+  // Sort
+  filtered.sort((a,b)=>{
+    if(archiveMode){
+      return new Date(b.date)-new Date(a.date)||(b.timeStart||'').localeCompare(a.timeStart||'');
+    }
+    const ord={today:0,upcoming:1};
+    const sa=getStatus(a.date),sb=getStatus(b.date);
+    if((ord[sa]??2)!==(ord[sb]??2)) return (ord[sa]??2)-(ord[sb]??2);
+    const dc=new Date(a.date)-new Date(b.date);
+    return dc!==0?dc:(a.timeStart||'').localeCompare(b.timeStart||'');
+  });
+
+  // Pagination
+  const total=filtered.length;
+  const totalPages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+  if(currentPage>totalPages) currentPage=totalPages;
+  const pageItems=filtered.slice((currentPage-1)*PAGE_SIZE, currentPage*PAGE_SIZE);
+
+  if(!total){
+    const hasFilters = !archiveMode&&(currentStatFilter!=='upcoming'||currentFilter!=='all'||q||currentCalDate);
+    const msg = archiveMode ? '暂无已完成的行程'
+              : currentStatFilter==='today' ? '今天暂无行程安排'
+              : q ? `未找到含"${q}"的行程` : '暂无即将到来的行程';
+    const clearBtn = hasFilters
+      ? `<button class="btn-clear" onclick="clearAllFilters()">回到全部行程</button>` : '';
+    list.innerHTML=`<div class="empty-state"><span class="empty-icon">🌝</span><p>${msg}</p>${clearBtn}</div>`;
+    pg.innerHTML='';
+    return;
+  }
+
+  list.innerHTML=pageItems.map(it=>{
+    const d=new Date(it.date);
+    const cat=CAT_MAP[it.cat]||CAT_MAP['concert'];
+    const status=getStatus(it.date);
+    const timeStr = it.timeStart
+      ? (it.timeEnd ? `${it.timeStart} – ${it.timeEnd}` : it.timeStart)
+      : '';
+    return `
+    <div class="schedule-item" data-cat="${it.cat}">
+      <div class="item-date">
+        <div class="day">${d.getDate()}</div>
+        <div class="month-en">${MONTHS_EN[d.getMonth()]}</div>
+        <div class="month-zh">${MONTHS_ZH[d.getMonth()]}</div>
+      </div>
+      <div class="item-body">
+        <div class="item-top">
+          <span class="cat-badge ${cat.cls}">${cat.icon} ${cat.label}</span>
+          <span class="item-title">${escHtml(it.title)}</span>
+        </div>
+        <div class="item-meta">
+          ${timeStr ? `<span>⏰ ${timeStr}</span>` : ''}
+          ${it.location ? `<span>📍 ${escHtml(it.location)}</span>` : ''}
+          ${it.link ? `<span><a href="${escHtml(it.link)}" target="_blank" style="color:var(--b400);text-decoration:none;">🔗 链接</a></span>` : ''}
+        </div>
+        ${it.note ? `<div class="item-note">${escHtml(it.note)}</div>` : ''}
+      </div>
+      <div class="item-actions">
+        <span class="status-pill ${STATUS_CLS[status]}">${STATUS_LABEL[status]}</span>
+        <button class="btn-icon" onclick="openModal('${it.id}')" title="编辑">✎</button>
+        <button class="btn-icon" onclick="deleteItem('${it.id}')" title="删除">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Render pagination
+  if(totalPages<=1){ pg.innerHTML=''; return; }
+  let phtml='';
+  phtml+=`<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹ 上一页</button>`;
+  for(let i=1;i<=totalPages;i++){
+    phtml+=`<button class="page-btn${i===currentPage?' cur':''}" onclick="goPage(${i})">${i}</button>`;
+  }
+  phtml+=`<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>下一页 ›</button>`;
+  phtml+=`<span class="page-info">${total} 条 / 第 ${currentPage}/${totalPages} 页</span>`;
+  pg.innerHTML=phtml;
+}
+
+function goPage(p){
+  currentPage=p;
+  renderList();
+  document.getElementById('listView').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function clearCalDate(){
+  currentCalDate=null;
+  currentPage=1;
+  renderList();
+}
+
+function clearAllFilters(){
+  currentFilter='all';
+  currentStatFilter='upcoming';
+  currentCalDate=null;
+  archiveMode=false;
+  currentPage=1;
+  document.getElementById('searchInput').value='';
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  ['upcoming','today','past'].forEach(k=>
+    document.getElementById('sc-'+k).classList.toggle('active-stat',k==='upcoming')
+  );
+  document.getElementById('archiveTab').classList.remove('on');
+  renderList();
+}
+
+// ════════════════════════════════════════
+//  STATS UPDATE
+// ════════════════════════════════════════
+function updateStats(){
+  document.getElementById('statUpcoming').textContent = items.filter(x=>getStatus(x.date)==='upcoming').length;
+  document.getElementById('statToday').textContent    = items.filter(x=>getStatus(x.date)==='today').length;
+  document.getElementById('statPast').textContent     = items.filter(x=>getStatus(x.date)==='past').length;
+}
+
+// ════════════════════════════════════════
+//  BIRTHDAY COUNTDOWN (Minji 5月7日)
+// ════════════════════════════════════════
+function updateBirthday(){
+  const now=new Date();
+  let next=new Date(now.getFullYear(), 4, 7);
+  if(now>next) next=new Date(now.getFullYear()+1, 4, 7);
+  const diff=Math.ceil((next-now)/(1000*60*60*24));
+  const el=document.getElementById('birthdayCountdown');
+  if(!el) return;
+  if(diff===0){
+    el.textContent='🎂';
+    el.style.fontSize='1.6rem';
+  } else {
+    el.textContent= diff + '天';
+  }
+}
+updateBirthday();
+
+// ════════════════════════════════════════
+//  STATS PANEL — custom filters
+// ════════════════════════════════════════
+let statRange='all';
+let statCats=new Set(Object.keys(CAT_MAP));
+
+function initStatsPanel(){
+  const box=document.getElementById('statCatCheckboxes');
+  box.innerHTML=catOrder.map(c=>{
+    const cm=CAT_MAP[c]; if(!cm) return '';
+    return `<label class="stat-cat-check ${statCats.has(c)?'checked':''}" id="chk-${c}" onclick="toggleStatCat('${c}')">
+      ${cm.icon} ${cm.label}
+    </label>`;
+  }).join('');
+}
+
+function toggleStatCat(cat){
+  if(statCats.has(cat)) statCats.delete(cat);
+  else statCats.add(cat);
+  const el=document.getElementById('chk-'+cat);
+  if(el) el.classList.toggle('checked', statCats.has(cat));
+  applyStatFilters();
+}
+
+function setStatRange(r, el){
+  statRange=r;
+  document.querySelectorAll('.stat-range-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const customRow=document.getElementById('customRangeRow');
+  if(r==='custom'){
+    customRow.classList.remove('hidden');
+    customRow.style.display='flex';
+  } else {
+    customRow.classList.add('hidden');
+    applyStatFilters();
+  }
+}
+
+function getStatDateBounds(){
+  const now=new Date(); now.setHours(0,0,0,0);
+  if(statRange==='all') return {from:null,to:null};
+  if(statRange==='thisMonth'){
+    return {from:new Date(now.getFullYear(),now.getMonth(),1), to:new Date(now.getFullYear(),now.getMonth()+1,0)};
+  }
+  if(statRange==='last3'){
+    const from=new Date(now); from.setMonth(from.getMonth()-3);
+    return {from,to:now};
+  }
+  if(statRange==='thisYear'){
+    return {from:new Date(now.getFullYear(),0,1), to:new Date(now.getFullYear(),11,31)};
+  }
+  if(statRange==='custom'){
+    const fv=document.getElementById('statDateFrom').value;
+    const tv=document.getElementById('statDateTo').value;
+    return {from:fv?new Date(fv):null, to:tv?new Date(tv):null};
+  }
+  return {from:null,to:null};
+}
+
+function applyStatFilters(){
+  const {from,to}=getStatDateBounds();
+  const filtered=items.filter(it=>{
+    if(!statCats.has(it.cat)) return false;
+    const d=new Date(it.date); d.setHours(0,0,0,0);
+    if(from&&d<from) return false;
+    if(to&&d>to)     return false;
+    return true;
+  });
+
+  document.getElementById('statSummary').textContent=
+    `筛选结果：共 ${filtered.length} 条行程（${statCats.size} 种类型）`;
+
+  const catCount={};
+  filtered.forEach(it=>{ catCount[it.cat]=(catCount[it.cat]||0)+1; });
+  const maxCat=Math.max(1,...Object.values(catCount));
+  const catHTML=catOrder.filter(c=>statCats.has(c)).map(c=>{
+    const cm=CAT_MAP[c]; if(!cm) return '';
+    const cnt=catCount[c]||0;
+    const pct=Math.round((cnt/maxCat)*100);
+    return `<div class="stat-bar-row">
+      <div class="stat-bar-label">${cm.icon} ${cm.label}</div>
+      <div class="stat-bar-wrap"><div class="stat-bar-fill" style="width:${pct}%"></div></div>
+      <div class="stat-bar-count">${cnt}</div>
+    </div>`;
+  }).join('') || '<div style="font-size:12px;color:var(--tl)">暂无数据</div>';
+  document.getElementById('statByCat').innerHTML=catHTML;
+
+  const monthCount={};
+  filtered.forEach(it=>{
+    const d=new Date(it.date);
+    const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    monthCount[key]=(monthCount[key]||0)+1;
+  });
+  const sortedMonths=Object.keys(monthCount).sort().slice(-8);
+  const monthHTML=sortedMonths.map(k=>{
+    const [y,m]=k.split('-');
+    return `<div class="stat-month-row">
+      <span class="stat-month-label">${y}年${+m}月</span>
+      <span class="stat-month-val">${monthCount[k]} 条</span>
+    </div>`;
+  }).join('') || '<div style="font-size:12px;color:var(--tl)">暂无数据</div>';
+  document.getElementById('statByMonth').innerHTML=monthHTML;
+}
+
+function updateStatsPanel(){
+  initStatsPanel();
+  applyStatFilters();
+}
+
+// ════════════════════════════════════════
+//  VIEW TOGGLE
+// ════════════════════════════════════════
+function setView(v){
+  currentView=v;
+  document.getElementById('listView').classList.toggle('hidden',v!=='list');
+  document.getElementById('calView').classList.toggle('hidden',v!=='calendar');
+  document.getElementById('viewList').classList.toggle('active',v==='list');
+  document.getElementById('viewCal').classList.toggle('active',v==='calendar');
+  if(v==='calendar'){ buildCalJump(); renderCalendar(); }
+}
+
+function toggleSection(name){
+  const panels={stats:'statsPanel',export:'exportPanel',data:'dataPanel'};
+  const btnIds={stats:'toggleStats',export:'toggleExport',data:'toggleData'};
+  const panelEl=document.getElementById(panels[name]);
+  const btnEl=document.getElementById(btnIds[name]);
+  const isHidden=panelEl.classList.contains('hidden');
+  Object.values(panels).forEach(p=>document.getElementById(p).classList.add('hidden'));
+  Object.values(btnIds).forEach(b=>document.getElementById(b).classList.remove('on'));
+  if(isHidden){
+    panelEl.classList.remove('hidden');
+    btnEl.classList.add('on');
+    if(name==='stats') updateStatsPanel();
+  }
+}
+
+// ════════════════════════════════════════
+//  CALENDAR
+// ════════════════════════════════════════
+function changeMonth(delta){
+  calMonth+=delta;
+  if(calMonth>11){calMonth=0;calYear++;}
+  if(calMonth<0){calMonth=11;calYear--;}
+  buildCalJump(); renderCalendar();
+}
+
+function renderCalendar(){
+  const grid=document.getElementById('calGrid');
+  const dayNames=['日','一','二','三','四','五','六'];
+
+  const eventsByDay={};
+  items.forEach(it=>{
+    const d=new Date(it.date);
+    if(d.getFullYear()===calYear&&d.getMonth()===calMonth){
+      const k=d.getDate();
+      if(!eventsByDay[k]) eventsByDay[k]=[];
+      eventsByDay[k].push(it);
+    }
+  });
+  Object.keys(eventsByDay).forEach(k=>{
+    eventsByDay[k].sort((a,b)=>(a.timeStart||'').localeCompare(b.timeStart||''));
+  });
+
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const daysInPrev=new Date(calYear,calMonth,0).getDate();
+
+  let html=dayNames.map(d=>`<div class="cal-day-name">${d}</div>`).join('');
+  for(let i=firstDay-1;i>=0;i--)
+    html+=`<div class="cal-day other-month"><span class="cal-day-num">${daysInPrev-i}</span></div>`;
+
+  for(let d=1;d<=daysInMonth;d++){
+    const isToday=new Date(calYear,calMonth,d).getTime()===today.getTime();
+    const dayEvents=eventsByDay[d]||[];
+    const hasEvent=dayEvents.length>0;
+
+    let eventRowsHTML='';
+    dayEvents.slice(0,3).forEach(it=>{
+      const cat=CAT_MAP[it.cat]||CAT_MAP['concert'];
+      const shortTitle=it.title.length>12?it.title.slice(0,11)+'…':it.title;
+      eventRowsHTML+=`<div class="cal-event-row">
+        <span class="cal-event-icon">${cat.icon}</span>
+        <span class="cal-event-text">${escHtml(shortTitle)}</span>
+      </div>`;
+    });
+    if(dayEvents.length>3)
+      eventRowsHTML+=`<div class="cal-event-row"><span class="cal-event-text" style="color:var(--tl)">+${dayEvents.length-3} 条</span></div>`;
+
+    html+=`<div class="cal-day${isToday?' today':''}${hasEvent?' has-event':''}" onclick="calDayClick(${calYear}, ${calMonth}, ${d})">
+      <span class="cal-day-num">${d}</span>
+      ${eventRowsHTML}
+    </div>`;
+  }
+  const rem=(firstDay+daysInMonth)%7;
+  for(let d=1;d<=(rem===0?0:7-rem);d++)
+    html+=`<div class="cal-day other-month"><span class="cal-day-num">${d}</span></div>`;
+  grid.innerHTML=html;
+}
+
+function calDayClick(y,m,d){
+  const dateStr=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const dayItems=items.filter(it=>it.date===dateStr);
+  if(dayItems.length===0){
+    setView('list');
+    openModal();
+    setTimeout(()=>buildDateSelectors('fYear','fMonth','fDay',dateStr),20);
+  } else {
+    currentCalDate=dateStr;
+    currentStatFilter='upcoming';
+    currentFilter='all';
+    archiveMode=false;
+    currentPage=1;
+    ['upcoming','today','past'].forEach(k=>
+      document.getElementById('sc-'+k).classList.toggle('active-stat',k==='upcoming')
+    );
+    document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===0));
+    document.getElementById('archiveTab').classList.remove('on');
+    document.getElementById('searchInput').value='';
+    setView('list');
+    renderList();
+  }
+}
+
+// ════════════════════════════════════════
+//  EXPORT PNG  —  iPhone 16 Pro Max 竖屏适配
+//  画布逻辑宽 393px，scale=3 → 实际输出 1179px
+//  iPhone 16 Pro Max 物理屏宽 1320px，@3x，填满屏幕无需缩放
+// ════════════════════════════════════════
+function getDateRange(mode){
+  const t=new Date(today);
+  if(mode==='day'){
+    return {start:new Date(t),end:new Date(t),label:'今日行程'};
+  } else if(mode==='week'){
+    const dow=t.getDay();
+    const start=new Date(t); start.setDate(t.getDate()-dow);
+    const end=new Date(start); end.setDate(start.getDate()+6);
+    return {start,end,label:'本周行程'};
+  } else {
+    const start=new Date(t.getFullYear(),t.getMonth(),1);
+    const end=new Date(t.getFullYear(),t.getMonth()+1,0);
+    return {start,end,label:'本月行程'};
+  }
+}
+
+function exportImg(mode){
+  const {start,end,label}=getDateRange(mode);
+  const rangeItems=items.filter(it=>{
+    const d=new Date(it.date); d.setHours(0,0,0,0);
+    return d>=start&&d<=end;
+  }).sort((a,b)=>new Date(a.date)-new Date(b.date));
+
+  const canvas=document.getElementById('exportCanvas');
+
+  const fmtDate=d=>`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+  const rangeLabel=mode==='day'?fmtDate(start):`${fmtDate(start)} – ${fmtDate(end)}`;
+
+  const itemsHTML=rangeItems.length===0
+    ? `<div style="text-align:center;padding:40px;color:#6b9bc8;font-size:13px;">该时间段内暂无行程</div>`
+    : rangeItems.map(it=>{
+        const d=new Date(it.date);
+        const cat=CAT_MAP[it.cat]||CAT_MAP['concert'];
+        const timeStr=it.timeStart?(it.timeEnd?`${it.timeStart}–${it.timeEnd}`:it.timeStart):'';
+        const catColors={
+          concert:    {bg:'#fce7f3',col:'#be185d'},
+          variety:    {bg:'#fff7ed',col:'#c2410c'},
+          endorsement:{bg:'#ede9fe',col:'#6d28d9'},
+          live:       {bg:'#dbeafe',col:'#1e40af'},
+          flight:     {bg:'#d1fae5',col:'#065f46'},
+          sns:        {bg:'#fce7f3',col:'#9d174d'}
+        };
+        const cc=catColors[it.cat]||catColors.concert;
+        const metaParts=[timeStr&&`⏰ ${timeStr}`,it.location&&`📍 ${it.location}`].filter(Boolean);
+        return `<div class="exp-item">
+          <div class="exp-item-date">
+            <div class="exp-item-day">${d.getDate()}</div>
+            <div class="exp-item-mon">${MONTHS_EN[d.getMonth()]}</div>
+          </div>
+          <div class="exp-item-body">
+            <span class="exp-cat" style="background:${cc.bg};color:${cc.col}">${cat.icon} ${cat.label}</span>
+            <div class="exp-item-title">${escHtml(it.title)}</div>
+            ${metaParts.length?`<div class="exp-item-meta">${metaParts.join('　')}</div>`:''}
+          </div>
+        </div>`;
+      }).join('');
+
+  canvas.innerHTML=`
+    <div class="exp-header">
+      <div class="exp-title">민지 스케줄</div>
+      <div class="exp-range">${label}　${rangeLabel}</div>
+    </div>
+    ${itemsHTML}
+    <div class="exp-footer">NEWJEANS · MINJI　✦　민지 스케줄</div>
+  `;
+
+  if(typeof html2canvas==='undefined'){
+    showToast('导出库加载中，请联网后重试');
+    return;
+  }
+
+  // 临时显示以供渲染
+  canvas.style.left='0';
+  canvas.style.top='0';
+  canvas.style.zIndex='9999';
+  canvas.style.position='fixed';
+
+  showToast('正在生成图片…');
+
+  // 等待所有字体（含 East Sea Dokdo）加载完毕后再渲染
+  document.fonts.ready.then(()=>{
+    // 额外触发一次字体绘制，确保 East Sea Dokdo 已被激活
+    const probe=document.createElement('span');
+    probe.style.cssText='font-family:"East Sea Dokdo",cursive;font-size:40px;position:fixed;left:-9999px;top:0;opacity:0;';
+    probe.textContent='민지 스케줄';
+    document.body.appendChild(probe);
+    // 稍等一帧再截图，让浏览器真正完成字体渲染
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        html2canvas(canvas,{
+          backgroundColor:'#f0f7ff',
+          scale:3,
+          useCORS:true,
+          logging:false,
+          width:393,
+          windowWidth:393,
+        }).then(c=>{
+          document.body.removeChild(probe);
+          canvas.style.left='-9999px';
+          canvas.style.zIndex='-1';
+          canvas.style.position='fixed';
+          const link=document.createElement('a');
+          link.download=`minji-schedule-${mode}-${Date.now()}.png`;
+          link.href=c.toDataURL('image/png');
+          link.click();
+          showToast('图片已导出 ✦');
+        }).catch(()=>{
+          document.body.removeChild(probe);
+          canvas.style.left='-9999px';
+          showToast('导出失败，请重试');
+        });
+      });
+    });
+  });
+}
+
+// ════════════════════════════════════════
+//  JSON EXPORT / IMPORT
+// ════════════════════════════════════════
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(items,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='minji-schedule.json'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('数据已导出 ✦');
+}
+
+function importJSON(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!Array.isArray(data)) throw new Error('格式错误');
+      items=data.map(it=>({
+        ...it,
+        timeStart: it.timeStart||it.time||'',
+        timeEnd:   it.timeEnd||'',
+      }));
+      persist();
+      renderFilterTabs(); renderList(); updateStats(); updateStatsPanel();
+      if(currentView==='calendar') renderCalendar();
+      showToast(`已导入 ${items.length} 条行程 ✦`);
+    } catch(err){
+      showToast('导入失败：文件格式不正确');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+// ════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ════════════════════════════════════════
+//  SEED DEMO DATA
+// ════════════════════════════════════════
+if(items.length===0){
+  const f=d=>new Date(today.getTime()+d*86400000).toISOString().split('T')[0];
+  const td=today.toISOString().split('T')[0];
+  items=[
+    {id:'1',title:'NewJeans Bunnies Camp 2024',date:'2024-01-19',timeStart:'18:00',timeEnd:'22:00',cat:'concert',location:'首尔 KSPO Dome',note:'新年第一场！🐰',link:'',createdAt:1,updatedAt:1},
+    {id:'2',title:'ins 粉丝互动直播',date:td,timeStart:'20:00',timeEnd:'',cat:'live',location:'',note:'今晚！不要忘记',link:'',createdAt:2,updatedAt:2},
+    {id:'3',title:'首尔→东京航班',date:f(3),timeStart:'09:30',timeEnd:'12:10',cat:'flight',location:'仁川国际机场',note:'KE701',link:'',createdAt:3,updatedAt:3},
+    {id:'4',title:"Levi's 2025春季大片",date:f(10),timeStart:'10:00',timeEnd:'',cat:'endorsement',location:'首尔',note:'正式大片下周发布',link:'',createdAt:4,updatedAt:4},
+    {id:'5',title:'综艺「运动会」录制播出',date:f(18),timeStart:'21:00',timeEnd:'22:30',cat:'variety',location:'',note:'剪辑了很多笑点片段',link:'',createdAt:5,updatedAt:5},
+    {id:'6',title:'Twitter/X 更新自拍',date:f(2),timeStart:'',timeEnd:'',cat:'sns',location:'',note:'',link:'',createdAt:6,updatedAt:6},
+  ];
+  persist();
+}
+
+// ════════════════════════════════════════
+//  NOTICE BAR
+// ════════════════════════════════════════
+function saveNotice(){
+  const el=document.getElementById('noticeContent');
+  localStorage.setItem('minji_notice', el.innerHTML);
+}
+(function loadNotice(){
+  const saved=localStorage.getItem('minji_notice');
+  if(saved){
+    document.getElementById('noticeContent').innerHTML=saved;
+  }
+})();
+
+// ════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════
+items=items.map(it=>({...it,timeStart:it.timeStart||it.time||'',timeEnd:it.timeEnd||''}));
+
+renderFilterTabs();
+renderList();
+updateStats();
+document.getElementById('sc-upcoming').classList.add('active-stat');
+</script>
+</body>
+</html>
