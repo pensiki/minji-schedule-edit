@@ -1317,7 +1317,9 @@ function exportImg(mode){
 //  JSON EXPORT / IMPORT
 // ════════════════════════════════════════
 function exportJSON(){
-  const blob=new Blob([JSON.stringify(items,null,2)],{type:'application/json'});
+  const notice=document.getElementById('noticeContent').innerHTML;
+  const payload={ items, notice };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   a.href=url; a.download='minji-schedule.json'; a.click();
@@ -1330,13 +1332,19 @@ function importJSON(e){
   const reader=new FileReader();
   reader.onload=ev=>{
     try{
-      const data=JSON.parse(ev.target.result);
+      const raw=JSON.parse(ev.target.result);
+      // 兼容旧格式（纯数组）和新格式（{items, notice}）
+      const data=Array.isArray(raw) ? raw : raw.items;
       if(!Array.isArray(data)) throw new Error('格式错误');
       items=data.map(it=>({
         ...it,
         timeStart: it.timeStart||it.time||'',
         timeEnd:   it.timeEnd||'',
       }));
+      if(!Array.isArray(raw) && raw.notice !== undefined){
+        document.getElementById('noticeContent').innerHTML=raw.notice;
+        localStorage.setItem('minji_notice', raw.notice);
+      }
       persist();
       renderFilterTabs(); renderList(); updateStats(); updateStatsPanel();
       if(currentView==='calendar') renderCalendar();
